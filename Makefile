@@ -18,15 +18,15 @@ else
 endif
 
 PKG_NAME=github.com/haabiz-game/image-syncer
-APP_BIN ?= bin/octops-image-syncer
-DOCKER_IMAGE_TAG ?= octops/octops-image-syncer:${VERSION}
+APP_BIN ?= bin/image-syncer
+DOCKER_IMAGE_TAG ?= ghcr.io/haabiz-game/image-syncer:${VERSION}
 
 LDFLAGS := -X "${PKG_NAME}/internal/version.Version=${VERSION}"
 LDFLAGS += -X "${PKG_NAME}/internal/version.BuildTS=$(shell date -u '+%Y-%m-%d %I:%M:%S')"
 LDFLAGS += -X "${PKG_NAME}/internal/version.GitCommit=$(shell git rev-parse HEAD)"
 LDFLAGS += -X "${PKG_NAME}/internal/version.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
 
-GO       := GO111MODULE=on GOPRIVATE=github.com/Octops GOSUMDB=off go
+GO       := GO111MODULE=on go
 GOBUILD  := CGO_ENABLED=0 $(GO) build $(BUILD_FLAG)
 GOTEST   := $(GO) test -gcflags='-l' -p 3
 
