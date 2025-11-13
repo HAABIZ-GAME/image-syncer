@@ -30,9 +30,7 @@ jobs:
         run: echo "image=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Set up QEMU (for multi-arch tags)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: docker/setup-qemu-action@v3
+      # QEMU not needed; building only linux/amd64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -52,14 +50,12 @@ jobs:
           images: |
             ${{ steps.prep.outputs.image }}
           tags: |
-            # Only push minimal tags to reduce churn
-            # - latest on default branch
+            # Commit SHA tag on all pushes
+            type=sha
+            # Latest only on the default branch
             type=raw,value=latest,enable={{is_default_branch}}
-            # - exact tag name on tag pushes
-            type=ref,event=tag
 
-      - name: Build (single-arch for PR/branches)
-        if: !startsWith(github.ref, 'refs/tags/')
+      - name: Build and push (linux/amd64 only)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -68,19 +64,6 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
-          tags: ${{ steps.meta-ghcr.outputs.tags }}
-          labels: ${{ steps.meta-ghcr.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push (multi-arch on tags)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
           tags: ${{ steps.meta-ghcr.outputs.tags }}
           labels: ${{ steps.meta-ghcr.outputs.labels }}
           cache-from: type=gha
