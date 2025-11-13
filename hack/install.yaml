@@ -55,7 +55,6 @@ spec:
       containers:
         - name: octops-image-syncer
           image: ghcr.io/haabiz-game/image-syncer:latest
-          imagePullPolicy: Never
           ports:
             - name: http
               containerPort: 80
