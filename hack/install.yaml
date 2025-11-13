@@ -50,6 +50,8 @@ spec:
         name: octops-image-syncer
     spec:
       serviceAccountName: octops-controller
+      imagePullSecrets:
+        - name: haabiz
       containers:
         - name: octops-image-syncer
           image: octops/octops-image-syncer:v0.1.1
