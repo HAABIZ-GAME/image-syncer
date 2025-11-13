@@ -17,7 +17,6 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -25,6 +24,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Prepare image name (lowercase)
+        id: prep
+        run: echo "image=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+        shell: bash
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -44,7 +48,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ toLower(env.IMAGE_NAME) }}
+            ${{ steps.prep.outputs.image }}
           tags: |
             type=ref,event=branch
             type=ref,event=tag
@@ -62,4 +66,3 @@ jobs:
           labels: ${{ steps.meta-ghcr.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
