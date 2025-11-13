@@ -1,6 +1,6 @@
 FROM golang:1.25 as build-env
 
-WORKDIR /go/src/github.com/Octops/octops-image-syncer
+WORKDIR /go/src/github.com/haabiz-game/image-syncer
 
 COPY go.mod go.sum ./
 RUN go mod download

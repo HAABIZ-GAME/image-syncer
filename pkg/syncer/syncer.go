@@ -6,10 +6,11 @@ import (
 
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/Octops/agones-event-broadcaster/pkg/events"
-	"github.com/Octops/octops-image-syncer/pkg/runtime/log"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	pb "k8s.io/cri-api/pkg/apis/runtime/v1"
+
+	"github.com/haabiz-game/image-syncer/pkg/runtime/log"
 )
 
 type ImageServiceClient interface {

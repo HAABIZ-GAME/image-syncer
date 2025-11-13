@@ -17,7 +17,7 @@ else
     SED := sed
 endif
 
-PKG_NAME=github.com/Octops/octops-image-syncer
+PKG_NAME=github.com/haabiz-game/image-syncer
 APP_BIN ?= bin/octops-image-syncer
 DOCKER_IMAGE_TAG ?= octops/octops-image-syncer:${VERSION}
 

@@ -1,4 +1,4 @@
-module github.com/Octops/octops-image-syncer
+module github.com/haabiz-game/image-syncer
 
 go 1.20
 

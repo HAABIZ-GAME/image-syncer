@@ -7,10 +7,11 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/Octops/octops-image-syncer/cmd"
-	"github.com/Octops/octops-image-syncer/internal/version"
-	"github.com/Octops/octops-image-syncer/pkg/runtime/log"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/haabiz-game/image-syncer/cmd"
+	"github.com/haabiz-game/image-syncer/internal/version"
+	"github.com/haabiz-game/image-syncer/pkg/runtime/log"
 )
 
 var (

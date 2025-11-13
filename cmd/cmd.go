@@ -5,12 +5,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/Octops/octops-image-syncer/pkg/clients"
-	"github.com/Octops/octops-image-syncer/pkg/syncer"
-	"github.com/Octops/octops-image-syncer/pkg/transport"
-	"github.com/Octops/octops-image-syncer/pkg/watcher"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
+
+	"github.com/haabiz-game/image-syncer/pkg/clients"
+	"github.com/haabiz-game/image-syncer/pkg/syncer"
+	"github.com/haabiz-game/image-syncer/pkg/transport"
+	"github.com/haabiz-game/image-syncer/pkg/watcher"
 )
 
 func Execute(ctx context.Context, config *rest.Config, duration time.Duration, port int, metricsBindAddress string) error {

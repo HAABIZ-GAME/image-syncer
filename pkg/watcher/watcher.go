@@ -7,9 +7,10 @@ import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
-	"github.com/Octops/octops-image-syncer/pkg/runtime/log"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
+
+	"github.com/haabiz-game/image-syncer/pkg/runtime/log"
 )
 
 type Config struct {
