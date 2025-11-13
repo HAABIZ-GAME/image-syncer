@@ -54,7 +54,7 @@ spec:
         - name: haabiz
       containers:
         - name: octops-image-syncer
-          image: octops/octops-image-syncer:v0.1.1
+          image: ghcr.io/haabiz-game/image-syncer:latest
           imagePullPolicy: Never
           ports:
             - name: http
