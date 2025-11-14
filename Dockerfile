@@ -17,6 +17,6 @@ RUN make build
 
 FROM gcr.io/distroless/static:nonroot
 
-COPY --from=build-env /go/bin/octops-image-syncer /
+COPY --from=0 /go/bin/octops-image-syncer /
 
 ENTRYPOINT ["/octops-image-syncer"]
