@@ -63,9 +63,9 @@ spec:
               protocol: TCP
           env:
             - name: CONN_TARGET
-              value: "unix:///run/runtime/cri.sock"
+              value: "unix:///run/k3s/containerd/containerd.sock"
           volumeMounts:
-            - mountPath: /run/runtime/cri.sock
+            - mountPath: /run/k3s/containerd/containerd.sock
               name: runtime-sock
               readOnly: false
           resources:
