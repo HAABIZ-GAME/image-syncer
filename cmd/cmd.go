@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/haabiz-game/image-syncer/pkg/clients"
+	"github.com/haabiz-game/image-syncer/pkg/runtime/log"
 	"github.com/haabiz-game/image-syncer/pkg/syncer"
 	"github.com/haabiz-game/image-syncer/pkg/transport"
 	"github.com/haabiz-game/image-syncer/pkg/watcher"
@@ -21,6 +22,7 @@ func Execute(ctx context.Context, config *rest.Config, duration time.Duration, p
 		return errors.Wrapf(err, "failed to create connection to: %s", target)
 	}
 	defer conn.Close()
+	log.Logger().Infof("connected to %s", target)
 
 	imageServiceClient := clients.NewImageServiceClient(conn)
 	imageSyncer := syncer.NewFleetImageSyncer(imageServiceClient)

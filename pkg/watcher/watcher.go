@@ -40,6 +40,7 @@ func NewFleetWatcher(config *Config, imageSyncer ImageSyncer) (*FleetWatcher, er
 }
 
 func (f *FleetWatcher) Start(ctx context.Context) error {
+	log.Logger().Info("starting fleet watcher")
 	go func() {
 		if err := f.broadcaster.Start(ctx); err != nil {
 			log.Logger().WithError(err).Fatal("error starting broadcaster")

@@ -55,6 +55,8 @@ spec:
       containers:
         - name: octops-image-syncer
           image: ghcr.io/haabiz-game/image-syncer:latest
+          args:
+            - "--sync-period=1s"
           ports:
             - name: http
               containerPort: 80
