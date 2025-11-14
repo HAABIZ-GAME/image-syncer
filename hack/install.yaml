@@ -49,6 +49,9 @@ spec:
       labels:
         name: octops-image-syncer
     spec:
+      securityContext:
+        runAsUser: 0
+        runAsNonRoot: false
       serviceAccountName: octops-controller
       imagePullSecrets:
         - name: haabiz
@@ -65,8 +68,8 @@ spec:
             - name: CONN_TARGET
               value: "unix:///run/k3s/containerd/containerd.sock"
           volumeMounts:
-            - mountPath: /run/k3s/containerd/containerd.sock
-              name: runtime-sock
+            - name: runtime-sock
+              mountPath: /run/k3s/containerd
               readOnly: false
           resources:
             limits:
@@ -79,5 +82,5 @@ spec:
       volumes:
         - name: runtime-sock
           hostPath:
-            path: "/run/k3s/containerd/containerd.sock"
-            type: Socket
+            path: /run/k3s/containerd
+            type: Directory
