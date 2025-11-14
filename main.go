@@ -43,8 +43,6 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	log.Logger().Info("executing image syncer", "sync-period", syncPeriod, "port", port, "metrics-bind-address", metricsBindAddress)
-
 	if err := cmd.Execute(ctx, clientConf, duration, port, metricsBindAddress); err != nil {
 		log.Logger().WithError(err).Fatal("failed to start syncer")
 	}

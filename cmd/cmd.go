@@ -17,7 +17,10 @@ import (
 
 func Execute(ctx context.Context, config *rest.Config, duration time.Duration, port int, metricsBindAddress string) error {
 	target := os.Getenv("CONN_TARGET")
-	conn, err := transport.NewConn(target)
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	conn, err := transport.NewConn(ctx, target)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create connection to: %s", target)
 	}
