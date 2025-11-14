@@ -1,4 +1,4 @@
-FROM golang:1.25 as build-env
+FROM golang:1.25
 
 WORKDIR /go/src/github.com/haabiz-game/image-syncer
 
@@ -7,8 +7,11 @@ RUN go mod download
 
 COPY . .
 
-ENV APP_BIN /go/bin/octops-image-syncer
-ENV VERSION v0.1.1
+ENV APP_BIN=/go/bin/octops-image-syncer \
+    VERSION=v0.1.1 \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
 
 RUN make build
 
