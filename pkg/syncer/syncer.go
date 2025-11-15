@@ -1,16 +1,23 @@
 package syncer
 
 import (
-	"context"
-	"reflect"
+    "context"
+    "encoding/base64"
+    "encoding/json"
+    "reflect"
+    "strings"
 
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	"github.com/Octops/agones-event-broadcaster/pkg/events"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	pb "k8s.io/cri-api/pkg/apis/runtime/v1"
+    v1 "agones.dev/agones/pkg/apis/agones/v1"
+    "github.com/Octops/agones-event-broadcaster/pkg/events"
+    "github.com/pkg/errors"
+    "github.com/sirupsen/logrus"
+    corev1 "k8s.io/api/core/v1"
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/client-go/kubernetes"
+    "k8s.io/client-go/rest"
+    pb "k8s.io/cri-api/pkg/apis/runtime/v1"
 
-	"github.com/haabiz-game/image-syncer/pkg/runtime/log"
+    "github.com/haabiz-game/image-syncer/pkg/runtime/log"
 )
 
 type ImageServiceClient interface {
@@ -21,10 +28,11 @@ type ImageServiceClient interface {
 // FleetImageSyncer implements the Broker interface used by the Agones Event Broadcaster to notify events
 type FleetImageSyncer struct {
 	imageClient ImageServiceClient
+	config      *rest.Config
 }
 
-func NewFleetImageSyncer(client ImageServiceClient) *FleetImageSyncer {
-	return &FleetImageSyncer{imageClient: client}
+func NewFleetImageSyncer(client ImageServiceClient, config *rest.Config) *FleetImageSyncer {
+	return &FleetImageSyncer{client, config}
 }
 
 func (f *FleetImageSyncer) BuildEnvelope(event events.Event) (*events.Envelope, error) {
@@ -74,12 +82,13 @@ func (f *FleetImageSyncer) HandleAddedUpdated(fleet *v1.Fleet) error {
 
 		return nil
 	}
-	var auth *pb.AuthConfig
-	if len(fleet.Spec.Template.Spec.Template.Spec.ImagePullSecrets) > 0 {
-		//auth = &pb.AuthConfig{
-		//	ServerAddress: "ghcr.io",
-		//}
-	}
+    var auth *pb.AuthConfig
+    if len(fleet.Spec.Template.Spec.Template.Spec.ImagePullSecrets) > 0 {
+        auth, err = f.getPullSecret(fleet.GetNamespace(), fleet.Spec.Template.Spec.Template.Spec.ImagePullSecrets[0].Name)
+        if err != nil {
+            log.Logger().WithError(err).WithFields(fields).Warn("failed to read imagePullSecret; proceeding without auth")
+        }
+    }
 
 	ref, err := f.PullImage(image, auth)
 	if err != nil {
@@ -87,7 +96,7 @@ func (f *FleetImageSyncer) HandleAddedUpdated(fleet *v1.Fleet) error {
 		return nil
 	}
 
-	log.Logger().WithFields(fields).WithField("ref", ref).Info("fleet synced")
+    log.Logger().WithFields(fields).WithField("ref", ref).Info("fleet synced")
 
 	return nil
 }
@@ -127,6 +136,111 @@ func (f *FleetImageSyncer) PullImage(image string, auth *pb.AuthConfig) (string,
 	}
 
 	return resp.GetImageRef(), nil
+}
+
+func (f *FleetImageSyncer) getPullSecret(namespace, name string) (*pb.AuthConfig, error) {
+    ctx := context.Background()
+    k, err := kubernetes.NewForConfig(f.config)
+    if err != nil {
+        return nil, errors.Wrap(err, "failed to create kubernetes client")
+    }
+    sec, err := k.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
+    if err != nil {
+        return nil, errors.Wrap(err, "failed to get imagePullSecret")
+    }
+
+    switch sec.Type {
+    case corev1.SecretTypeDockerConfigJson:
+        b, ok := sec.Data[corev1.DockerConfigJsonKey]
+        if !ok {
+            return nil, errors.New(".dockerconfigjson key missing in secret")
+        }
+        return parseDockerConfigJSON(b)
+    default:
+        return nil, errors.Errorf("unsupported imagePullSecret type: %s (only kubernetes.io/dockerconfigjson supported)", sec.Type)
+    }
+}
+
+type dockerAuthEntry struct {
+    Username string `json:"username"`
+    Password string `json:"password"`
+    Auth     string `json:"auth"`
+}
+
+type dockerConfigJSON struct {
+    Auths map[string]dockerAuthEntry `json:"auths"`
+}
+
+func parseDockerConfigJSON(b []byte) (*pb.AuthConfig, error) {
+    var cfg dockerConfigJSON
+    if err := json.Unmarshal(b, &cfg); err != nil {
+        return nil, errors.Wrap(err, "failed to unmarshal dockerconfigjson")
+    }
+    if len(cfg.Auths) == 0 {
+        return nil, errors.New("dockerconfigjson has no auths")
+    }
+
+    // Prefer GHCR if present, else first entry
+    var server string
+    var ent dockerAuthEntry
+    if e, ok := pickAuth(cfg.Auths, "ghcr.io"); ok {
+        server, ent = e.server, e.entry
+    } else {
+        for k, v := range cfg.Auths {
+            server = k
+            ent = v
+            break
+        }
+    }
+    return toCRIAuth(ent, server), nil
+}
+
+type authPick struct {
+    server string
+    entry  dockerAuthEntry
+}
+
+func pickAuth(m map[string]dockerAuthEntry, hint string) (authPick, bool) {
+    // exact match
+    for k, v := range m {
+        if normalizeRegistry(k) == normalizeRegistry(hint) {
+            return authPick{server: k, entry: v}, true
+        }
+    }
+    // contains match (handles https://ghcr.io/)
+    for k, v := range m {
+        if strings.Contains(normalizeRegistry(k), normalizeRegistry(hint)) {
+            return authPick{server: k, entry: v}, true
+        }
+    }
+    return authPick{}, false
+}
+
+func toCRIAuth(ent dockerAuthEntry, server string) *pb.AuthConfig {
+    username := ent.Username
+    password := ent.Password
+    if (username == "" || password == "") && ent.Auth != "" {
+        if dec, err := base64.StdEncoding.DecodeString(ent.Auth); err == nil {
+            parts := strings.SplitN(string(dec), ":", 2)
+            if len(parts) == 2 {
+                username, password = parts[0], parts[1]
+            }
+        }
+    }
+    return &pb.AuthConfig{
+        Username:      username,
+        Password:      password,
+        Auth:          ent.Auth,
+        ServerAddress: normalizeRegistry(server),
+    }
+}
+
+func normalizeRegistry(s string) string {
+    s = strings.TrimSpace(s)
+    s = strings.TrimPrefix(s, "https://")
+    s = strings.TrimPrefix(s, "http://")
+    s = strings.TrimSuffix(s, "/")
+    return s
 }
 
 func createPullImageRequest(image string, auth *pb.AuthConfig) *pb.PullImageRequest {

@@ -42,11 +42,11 @@ func TestFleetImageSyncer_PullImage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			client := new(imageServiceClient)
-			imageSyncer := NewFleetImageSyncer(client)
+			imageSyncer := NewFleetImageSyncer(client, nil)
 			request := createPullImageRequest(tc.image, nil)
 			client.On("PullImage", ctx, request).Return(tc.response, tc.err)
 
-			got, err := imageSyncer.PullImage(tc.image)
+			got, err := imageSyncer.PullImage(tc.image, nil)
 			require.Equal(t, tc.want, got)
 			require.Equal(t, err != nil, tc.wantErr)
 			require.ErrorIs(t, err, tc.err)
@@ -102,7 +102,7 @@ func TestFleetImageSyncer_CheckImageStatus(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			client := new(imageServiceClient)
-			imageSyncer := NewFleetImageSyncer(client)
+			imageSyncer := NewFleetImageSyncer(client, nil)
 			request := createImageStatusRequest(tc.image)
 			client.On("ImageStatus", ctx, request).Return(tc.response, tc.err)
 
