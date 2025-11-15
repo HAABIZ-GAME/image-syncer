@@ -219,22 +219,27 @@ func pickAuth(m map[string]dockerAuthEntry, hint string) (authPick, bool) {
 }
 
 func toCRIAuth(ent dockerAuthEntry, server string) *pb.AuthConfig {
-	username := ent.Username
-	password := ent.Password
-	if (username == "" || password == "") && ent.Auth != "" {
-		if dec, err := base64.StdEncoding.DecodeString(ent.Auth); err == nil {
-			parts := strings.SplitN(string(dec), ":", 2)
-			if len(parts) == 2 {
-				username, password = parts[0], parts[1]
-			}
-		}
-	}
-	return &pb.AuthConfig{
-		Username: username,
-		Password: password,
-		//Auth:          ent.Auth,
-		ServerAddress: normalizeRegistry(server),
-	}
+    username := ent.Username
+    password := ent.Password
+    if (username == "" || password == "") && ent.Auth != "" {
+        if dec, err := base64.StdEncoding.DecodeString(ent.Auth); err == nil {
+            parts := strings.SplitN(string(dec), ":", 2)
+            if len(parts) == 2 {
+                username, password = parts[0], parts[1]
+            }
+        }
+    }
+    // If auth header is not present but username/password is, populate Auth with base64(user:pass)
+    auth := ent.Auth
+    if auth == "" && username != "" {
+        auth = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+    }
+    return &pb.AuthConfig{
+        Username:      username,
+        Password:      password,
+        Auth:          auth,
+        ServerAddress: normalizeRegistry(server),
+    }
 }
 
 func normalizeRegistry(s string) string {
