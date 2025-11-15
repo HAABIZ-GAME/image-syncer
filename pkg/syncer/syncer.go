@@ -76,12 +76,15 @@ func (f *FleetImageSyncer) HandleAddedUpdated(fleet *v1.Fleet) error {
 	}
 	var auth *pb.AuthConfig
 	if len(fleet.Spec.Template.Spec.Template.Spec.ImagePullSecrets) > 0 {
-
+		//auth = &pb.AuthConfig{
+		//	ServerAddress: "ghcr.io",
+		//}
 	}
 
 	ref, err := f.PullImage(image, auth)
 	if err != nil {
-		return errors.Wrap(err, "failed to pull image")
+		log.Logger().WithError(err).WithFields(fields).Error("failed to pull image")
+		return nil
 	}
 
 	log.Logger().WithFields(fields).WithField("ref", ref).Info("fleet synced")
