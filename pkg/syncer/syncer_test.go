@@ -43,7 +43,7 @@ func TestFleetImageSyncer_PullImage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client := new(imageServiceClient)
 			imageSyncer := NewFleetImageSyncer(client)
-			request := createPullImageRequest(tc.image)
+			request := createPullImageRequest(tc.image, nil)
 			client.On("PullImage", ctx, request).Return(tc.response, tc.err)
 
 			got, err := imageSyncer.PullImage(tc.image)

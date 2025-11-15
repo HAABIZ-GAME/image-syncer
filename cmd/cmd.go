@@ -28,7 +28,7 @@ func Execute(ctx context.Context, config *rest.Config, duration time.Duration, p
 	log.Logger().Infof("connected to %s", target)
 
 	imageServiceClient := clients.NewImageServiceClient(conn)
-	imageSyncer := syncer.NewFleetImageSyncer(imageServiceClient)
+	imageSyncer := syncer.NewFleetImageSyncer(imageServiceClient, config)
 	watcherConfig := &watcher.Config{
 		ClientConfig:   config,
 		Duration:       duration,
