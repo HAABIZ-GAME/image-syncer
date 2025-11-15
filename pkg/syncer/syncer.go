@@ -230,9 +230,9 @@ func toCRIAuth(ent dockerAuthEntry, server string) *pb.AuthConfig {
 		}
 	}
 	return &pb.AuthConfig{
-		Username:      username,
-		Password:      password,
-		Auth:          ent.Auth,
+		Username: username,
+		Password: password,
+		//Auth:          ent.Auth,
 		ServerAddress: normalizeRegistry(server),
 	}
 }
