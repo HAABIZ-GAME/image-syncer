@@ -90,6 +90,7 @@ func (f *FleetImageSyncer) HandleAddedUpdated(fleet *v1.Fleet) error {
 			log.Logger().WithError(err).WithFields(fields).Warn("failed to read imagePullSecret; proceeding without auth")
 		}
 	}
+	fields["auth"] = auth
 
 	ref, err := f.PullImage(image, auth)
 	if err != nil {
