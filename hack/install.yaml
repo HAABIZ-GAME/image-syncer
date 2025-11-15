@@ -15,6 +15,9 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
   - apiGroups: ["agones.dev"]
     resources: ["fleets"]
     verbs: ["get", "list", "watch"]
@@ -59,7 +62,7 @@ spec:
         - name: octops-image-syncer
           image: ghcr.io/haabiz-game/image-syncer:latest
           args:
-            - "--sync-period=1s"
+            - "--sync-period=15s"
           ports:
             - name: http
               containerPort: 80
