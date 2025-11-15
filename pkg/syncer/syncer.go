@@ -84,6 +84,7 @@ func (f *FleetImageSyncer) HandleAddedUpdated(fleet *v1.Fleet) error {
 	}
 	var auth *pb.AuthConfig
 	if len(fleet.Spec.Template.Spec.Template.Spec.ImagePullSecrets) > 0 {
+		var err error
 		auth, err = f.getPullSecret(fleet.GetNamespace(), fleet.Spec.Template.Spec.Template.Spec.ImagePullSecrets[0].Name)
 		if err != nil {
 			log.Logger().WithError(err).WithFields(fields).Warn("failed to read imagePullSecret; proceeding without auth")
